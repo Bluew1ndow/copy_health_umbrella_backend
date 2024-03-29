@@ -1,4 +1,7 @@
 from django.contrib import admin
+from import_export import resources, fields
+from import_export.admin import ImportExportModelAdmin, ExportMixin
+from import_export.widgets import ForeignKeyWidget
 from .models import (
     disease_table,
     pathy_table,
@@ -10,45 +13,59 @@ from .models import (
     book_table,
     whatsapp_table,
 )
+from .resources import *
+
+# from import_export.admin import ImportExportModelAdmin
 
 
-class DiseaseAdmin(admin.ModelAdmin):
+
+class DiseaseAdmin(ImportExportModelAdmin):
+    resource_class = DiseaseResource
     list_filter = ("show",)
     search_fields = ("name",)
 
 
-class PathyAdmin(admin.ModelAdmin):
-    list_filter = ("disease","show",)
+
+class PathyAdmin(ImportExportModelAdmin):           # Modified admin.ModelAdmin -> ImportExportAdmin
+    resource_class = PathyResource                  # PathyResource Class Imported from resources.py
+    list_filter = ("disease__name", "show")
     search_fields = ("name",)
 
 
-class DataAdmin(admin.ModelAdmin):
+
+class DataAdmin(ImportExportModelAdmin):
+    resource_class = DataResource
     list_display = ("title","pk","pathy","source",)
     list_filter = ("pathy__disease","pathy__name","source","show",)
     search_fields = ("title","pk",)
 
 
-class SourceAdmin(admin.ModelAdmin):
+class SourceAdmin(ImportExportModelAdmin):
+    resource_class = SourceResource
     search_fields = ("title","pk")
 
 
-class CaseAdmin(admin.ModelAdmin):
+class CaseAdmin(ImportExportModelAdmin):
+    resource_class = CaseResource
     list_display = ("title","pk",)
     list_filter = ("pathy__disease","pathy__name","show",)
     search_fields = ("pk", "title", "first_name", "last_name")
 
 
-class SexAdmin(admin.ModelAdmin):
+class SexAdmin(ImportExportModelAdmin):
+    resource_class = SexResource
     list_filter = ("show",)
 
 
-class BookAdmin(admin.ModelAdmin):
+class BookAdmin(ImportExportModelAdmin):
+    resource_class = BookResource
     list_display = ("name","author","rating")
     list_filter = ("pathy__disease","pathy__name","show",)
     search_fields = ("name","author",)
 
 
-class WhatsappAdmin(admin.ModelAdmin):
+class WhatsappAdmin(ImportExportModelAdmin):
+    resource_class = WhatsappResource
     list_display = ("pathy",)
     list_filter = ("pathy__disease","pathy__name","show",)
     search_fields = ("pathy__name",)

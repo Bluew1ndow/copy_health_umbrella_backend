@@ -84,7 +84,6 @@ class pathy_table(models.Model):
             self.image_link.name = self.image_link.name.replace(name, f"{name}_{timestamp}")
         super().save(*args, **kwargs)
 
-
 class source_table(models.Model):
     name = models.CharField(max_length=1000, choices=SOURCE_CHOICES)
     text = models.TextField()

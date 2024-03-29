@@ -7,4 +7,8 @@ urlpatterns = [
     # path("resend-join-us-opt", views.resend_join_us_otp, name="resend-join-us-otp"),
     path("share-experience", views.share_experience, name="share-experience"),
     path("ask-suggestion", views.ask_suggestion, name="ask-suggestion"),
+    path("login-otp", views.login_view, name="login-view"),
+    path("verify-otp", views.otp_view, name="verify-otp"),
+    # path('send-otp/', send_welcome_email, name='send_welcome_email'),
+
 ]

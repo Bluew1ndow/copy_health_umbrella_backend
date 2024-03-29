@@ -1,3 +1,4 @@
+import pyotp
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import join_us_table, share_experience_table, ask_suggestion_table
@@ -5,6 +6,10 @@ from datetime import datetime, timedelta
 import time
 import logging
 logger = logging.getLogger('file_log')
+from .utils import send_otp
+
+from django.shortcuts import render
+from django.core.exceptions import ObjectDoesNotExist
 
 
 # Join us OTP
@@ -187,7 +192,7 @@ def ask_suggestion(request):
     if request.method != 'POST':
         logger.error("invalid request method")
         return JsonResponse(data={"message": f"method {request.method} does not exist"}, status=405)
-    
+
     try:
         if int(request.POST['age'])<0 or int(request.POST['age'])>200:
             return JsonResponse(data={"message": "invalid age"}, status=400)
@@ -215,7 +220,7 @@ def ask_suggestion(request):
 
         if request.POST.get("show_email") is not None:
             ask_suggestion_obj.show_email = True if request.POST["show_email"]=="true" else False
-        
+
         if request.POST.get("show_study") is not None:
             ask_suggestion_obj.show_study = True if request.POST["show_study"]=="true" else False
 
@@ -224,7 +229,7 @@ def ask_suggestion(request):
             if not reports_obj.name.lower().endswith('.pdf'):
                 return JsonResponse(data={"message": "invalid document format"}, status=400)
             ask_suggestion_obj.reports = reports_obj
-        
+
         ask_suggestion_obj.save()
         logger.info("information saved")
         logger.info(f"time taken: {time.time()-start_time}")
@@ -232,3 +237,67 @@ def ask_suggestion(request):
     except Exception as e:
         logger.error(e)
         return JsonResponse(data={"message": "error while saving information"}, status=500)
+
+
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        print("HI i am login page")
+        email_address = request.POST['email_address']
+
+        try:
+            if(email_address is not None):
+                request.session['email_address'] = email_address
+                send_otp(request)
+                return JsonResponse(data={"message": "Redirecting to OTP Page"}, status=302)
+
+
+            else:
+                return JsonResponse(data={"message" : "Please enter email address"}, status= 401)
+        except Exception as e:
+            logger.error(e)
+            return JsonResponse(data={"message": "error while saving information"}, status=500)
+
+
+    else:
+        # If OTP is not verified, return a response indicating OTP mismatch
+        return JsonResponse(data={"message": f"Method {request.method} not allowed"}, status=405)
+
+        # return JsonResponse(data={"message": "OTP mismatch"}, status=400)
+
+
+@csrf_exempt
+def otp_view(request):
+    error_message = None
+    if request.method == 'POST':
+        otp = request.POST['otp']
+        try:
+            email_address = request.session['email_address']
+            otp_secret_key = request.session['otp_secret_key']
+            otp_valid_until = request.session['otp_valid_until']
+
+        except Exception as e:
+            return JsonResponse(data={"message" : "Session Expired"}, status=401)
+
+        if otp_secret_key and otp_valid_until is not None:
+            valid_until = datetime.fromisoformat(otp_valid_until)
+
+            if valid_until > datetime.now():
+                totp = pyotp.TOTP(otp_secret_key,interval=60)
+                if totp.verify(otp):
+                    del request.session['otp_secret_key']
+                    del request.session['otp_valid_until']
+                    del request.session['email_address']
+
+                    return JsonResponse(data={"message" : "OTP is Correct"}, status=200)
+
+                else:
+                    return JsonResponse(data={"message": "OTP is INVALID"}, status=401)
+            else:
+                return JsonResponse(data={"message": "OTP Expired"}, status=401)
+        else:
+            return JsonResponse(data={"message": "Something went wrong"}, status=401)
+
+    else:
+        return JsonResponse(data={"message": f"Method {request.method} not allowed"}, status=405)
+

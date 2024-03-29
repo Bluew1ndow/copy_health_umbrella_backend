@@ -11,10 +11,9 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-from decouple import config
-from django.utils.translation import gettext_lazy as _
 import datetime
-
+import os
+import logging
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,10 +22,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("SECRET_KEY")
+SECRET_KEY = "django-insecure-f#6z=0zc(s1xznu_qi00@_5065@hiy=h-k2!yim5%*7owq+f$i"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG")
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -54,7 +53,8 @@ INSTALLED_APPS = [
     "analytics",
     "clinics",
     "members",
-    "user_forms"
+    "user_forms",
+    "import_export"
 ]
 
 MIDDLEWARE = [
@@ -74,7 +74,7 @@ ROOT_URLCONF = "health_umbrella_foundation_backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -102,11 +102,10 @@ DATABASES = {
     # AWS RDS connection settings
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DATABASE_NAME"),
-        "USER": config("DATABASE_USER"),
-        "PASSWORD": config("PASSWORD"),
-        "HOST": config("HOST"),
-        "PORT": config("PORT"),
+        "NAME": "test",
+        "USER": "postgres",
+        "PASSWORD": "1234",
+        "HOST": "localhost",
     }
 }
 
@@ -146,31 +145,17 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 # AWS S3 settings
-AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_CUSTOM_DOMAIN = config("AWS_S3_CUSTOM_DOMAIN")
-AWS_DEFAULT_ACL = config("AWS_DEFAULT_ACL")
-AWS_S3_OBJECT_PARAMETERS = {"CacheControl": f"max-age={config('MAX_AGE')}"}
-AWS_LOCATION = config("AWS_LOCATION")
-AWS_QUERYSTRING_AUTH = config("AWS_QUERYSTRING_AUTH")
-AWS_HEADERS = {
-    "Access-Control-Allow-Origin": f"{config('ACCESS_CONTROL_ALLOW_ORIGIN')}",
-}
-AWS_S3_VERIFY = False
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-STATICFILES_STORAGE = "storages.backends.s3boto3.S3StaticStorage"
 
-STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+# STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/static/"
+# MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
 
 # setting to run application on EC2 without s3
-# STATIC_URL = "/static/"
-# STATIC_ROOT = BASE_DIR / "static"
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "static"
 
 # CORS header settings
-CORS_ORIGIN_ALLOW_ALL = config("CORS_ORIGIN_ALLOW_ALL")
-CORS_ALLOW_CREDENTIALS = config("CORS_ALLOW_CREDENTIALS")
+# CORS_ORIGIN_ALLOW_ALL = config("CORS_ORIGIN_ALLOW_ALL")
+# CORS_ALLOW_CREDENTIALS = config("CORS_ALLOW_CREDENTIALS")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -179,51 +164,66 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # configurations of material admin
-MATERIAL_ADMIN_SITE = {
-    'HEADER':  _('Health Umbrella'),  # Admin site header
-    'TITLE':  _('HUF'),  # Admin site title
-    # 'FAVICON':  'path/to/favicon',  # Admin site favicon (path to static should be specified)
-    # 'MAIN_BG_COLOR':  'color',  # Admin site main color, css color should be specified
-    # 'MAIN_HOVER_COLOR':  'color',  # Admin site main hover color, css color should be specified
-    # 'PROFILE_PICTURE':  'path/to/image',  # Admin site profile picture (path to static should be specified)
-    # 'PROFILE_BG':  'path/to/image',  # Admin site profile background (path to static should be specified)
-    # 'LOGIN_LOGO':  'path/to/image',  # Admin site logo on login page (path to static should be specified)
-    # 'LOGOUT_BG':  'path/to/image',  # Admin site background on login/logout pages (path to static should be specified)
-    # 'SHOW_THEMES':  True,  #  Show default admin themes button
-    # 'TRAY_REVERSE': True,  # Hide object-tools and additional-submit-line by default
-    # 'NAVBAR_REVERSE': True,  # Hide side navbar by default
-    # 'SHOW_COUNTS': True, # Show instances counts for each model
-    # 'APP_ICONS': {  # Set icons for applications(lowercase), including 3rd party apps, {'application_name': 'material_icon_name', ...}
-    #     'sites': 'send',
-    # },
-    # 'MODEL_ICONS': {  # Set icons for models(lowercase), including 3rd party models, {'model_name': 'material_icon_name', ...}
-    #     'site': 'contact_mail',
-    # }
-}
+# MATERIAL_ADMIN_SITE = {
+#     'HEADER':  _('Health Umbrella'),  # Admin site header
+#     'TITLE':  _('HUF'),  # Admin site title
+#     # 'FAVICON':  'path/to/favicon',  # Admin site favicon (path to static should be specified)
+#     # 'MAIN_BG_COLOR':  'color',  # Admin site main color, css color should be specified
+#     # 'MAIN_HOVER_COLOR':  'color',  # Admin site main hover color, css color should be specified
+#     # 'PROFILE_PICTURE':  'path/to/image',  # Admin site profile picture (path to static should be specified)
+#     # 'PROFILE_BG':  'path/to/image',  # Admin site profile background (path to static should be specified)
+#     # 'LOGIN_LOGO':  'path/to/image',  # Admin site logo on login page (path to static should be specified)
+#     # 'LOGOUT_BG':  'path/to/image',  # Admin site background on login/logout pages (path to static should be specified)
+#     # 'SHOW_THEMES':  True,  #  Show default admin themes button
+#     # 'TRAY_REVERSE': True,  # Hide object-tools and additional-submit-line by default
+#     # 'NAVBAR_REVERSE': True,  # Hide side navbar by default
+#     # 'SHOW_COUNTS': True, # Show instances counts for each model
+#     # 'APP_ICONS': {  # Set icons for applications(lowercase), including 3rd party apps, {'application_name': 'material_icon_name', ...}
+#     #     'sites': 'send',
+#     # },
+#     # 'MODEL_ICONS': {  # Set icons for models(lowercase), including 3rd party models, {'model_name': 'material_icon_name', ...}
+#     #     'site': 'contact_mail',
+#     # }
+# }
+#
+# # Get today's date as a datetime object
+# today_date = datetime.date.today()
+#
+# # Format the date as a string in "dd-mm-yyyy" format
+# formatted_date = today_date.strftime("%d-%m-%Y")
+# #
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'log_file': {
+#             'level': 'INFO',  # Set the desired logging level
+#             'class': 'logging.FileHandler',
+#             'filename': BASE_DIR / (f'logs/application_{formatted_date}.log'),  # Regular log file
+#         }
+#     },
+#     'loggers': {
+#         'file_log': {
+#             'handlers': ['log_file'],
+#             'level': 'INFO',  # Set the desired logging level
+#             'propagate': True,
+#         },
+#     },
+# }
 
-# Get today's date as a datetime object
-today_date = datetime.date.today()
 
-# Format the date as a string in "dd-mm-yyyy" format
-formatted_date = today_date.strftime("%d-%m-%Y")
+# Configure logging
+logging.basicConfig(filename='export.log', level=logging.DEBUG)
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'log_file': {
-            'level': 'INFO',  # Set the desired logging level
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / (f'logs/application_{formatted_date}.log'),  # Regular log file
-        }
-    },
-    'loggers': {
-        'file_log': {
-            'handlers': ['log_file'],
-            'level': 'INFO',  # Set the desired logging level
-            'propagate': True,
-        },
-    },
-}
+# Create a logger
+logger = logging.getLogger('export')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = '21ucs011@lnmiit.ac.in'
+EMAIL_HOST_PASSWORD = 'I am adi@0909'
+
 
 
