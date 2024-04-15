@@ -9,6 +9,6 @@ urlpatterns = [
     path("ask-suggestion", views.ask_suggestion, name="ask-suggestion"),
     path("login-otp", views.login_view, name="login-view"),
     path("verify-otp", views.otp_view, name="verify-otp"),
-    # path('send-otp/', send_welcome_email, name='send_welcome_email'),
+    path("resend-otp",views.resend_otp,name="resend-otp")
 
 ]

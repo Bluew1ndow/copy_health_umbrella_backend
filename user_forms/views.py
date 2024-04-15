@@ -7,6 +7,11 @@ import time
 import logging
 logger = logging.getLogger('file_log')
 from .utils import send_otp
+import json
+from django.views.decorators.csrf import get_token
+from   django.http import HttpResponse
+
+from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
@@ -230,6 +235,11 @@ def ask_suggestion(request):
                 return JsonResponse(data={"message": "invalid document format"}, status=400)
             ask_suggestion_obj.reports = reports_obj
 
+        email_address = request.POST["email_address"]
+        request.session['email_address'] = email_address
+        print(email_address)
+        send_otp(request)
+
         ask_suggestion_obj.save()
         logger.info("information saved")
         logger.info(f"time taken: {time.time()-start_time}")
@@ -242,7 +252,7 @@ def ask_suggestion(request):
 @csrf_exempt
 def login_view(request):
     if request.method == 'POST':
-        print("HI i am login page")
+        logger.info("\nLogger Page")
         email_address = request.POST['email_address']
 
         try:
@@ -257,40 +267,38 @@ def login_view(request):
         except Exception as e:
             logger.error(e)
             return JsonResponse(data={"message": "error while saving information"}, status=500)
-
-
     else:
-        # If OTP is not verified, return a response indicating OTP mismatch
         return JsonResponse(data={"message": f"Method {request.method} not allowed"}, status=405)
-
-        # return JsonResponse(data={"message": "OTP mismatch"}, status=400)
 
 
 @csrf_exempt
 def otp_view(request):
-    error_message = None
+    logger.info("\nOTP view")
     if request.method == 'POST':
-        otp = request.POST['otp']
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            otp = data.get('otp')
+            logger.info(f"Received OTP: {otp}")
+        except json.JSONDecodeError as e:
+            return JsonResponse(data={"message": "Invalid JSON data"}, status=400)
+
         try:
             email_address = request.session['email_address']
             otp_secret_key = request.session['otp_secret_key']
             otp_valid_until = request.session['otp_valid_until']
-
-        except Exception as e:
-            return JsonResponse(data={"message" : "Session Expired"}, status=401)
+        except KeyError:
+            return JsonResponse(data={"message": "Session Expired"}, status=401)
 
         if otp_secret_key and otp_valid_until is not None:
             valid_until = datetime.fromisoformat(otp_valid_until)
 
             if valid_until > datetime.now():
-                totp = pyotp.TOTP(otp_secret_key,interval=60)
+                totp = pyotp.TOTP(otp_secret_key, interval=60)
                 if totp.verify(otp):
                     del request.session['otp_secret_key']
                     del request.session['otp_valid_until']
                     del request.session['email_address']
-
-                    return JsonResponse(data={"message" : "OTP is Correct"}, status=200)
-
+                    return JsonResponse(data={"message": "OTP is Correct"}, status=200)
                 else:
                     return JsonResponse(data={"message": "OTP is INVALID"}, status=401)
             else:
@@ -298,6 +306,26 @@ def otp_view(request):
         else:
             return JsonResponse(data={"message": "Something went wrong"}, status=401)
 
+    else:
+        return JsonResponse(data={"message": f"Method {request.method} not allowed"}, status=405)
+
+
+def resend_otp(request):
+    if request.method == 'POST':
+        logger.info("\nResend OTP Page")
+        email_address = request.POST['email_address']
+
+        try:
+            if email_address is not None :
+                request.session['email_address'] = email_address
+                send_otp(request)
+                return JsonResponse(data={"message": "Redirecting to OTP Page"}, status=302)
+
+            else:
+                return JsonResponse(data={"message": "Error occured while sending OTP"}, status= 401)
+        except Exception as e:
+            logger.error(e)
+            return JsonResponse(data={"message": "Internal Server Error"}, stats=500)
     else:
         return JsonResponse(data={"message": f"Method {request.method} not allowed"}, status=405)
 
