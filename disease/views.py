@@ -9,6 +9,9 @@ from analytics.models import disease_analytics_table, pathy_analytics_table
 from django.utils import timezone
 logger = logging.getLogger('file_log')
 DIRECT_CASE = 'directCase'
+THERAPIESWITHDRUGS = "therapiesWithDrugs"
+THERAPIESWITHOUTDRUGS = "therapiesWithoutDrugs"
+LESSKNOWNTHERAPIES = "lessKnownTherapies"
 
 def update_disease_analytics(disease_object):
     disease_analytics_obj, created = disease_analytics_table.objects.get_or_create(disease=disease_object, date=timezone.now().date())
@@ -49,36 +52,36 @@ class DiseaseView(View):
 
             # getting data of different types of therapies
             therapiesWithDrugs = []
-            for pathy in pathy_table.objects.filter(disease__name=disease, type="therapiesWithDrugs"):
+            for pathy in pathy_table.objects.filter(disease__name=disease, type=THERAPIESWITHDRUGS):
                 summary = summary_table.objects.get(pathy__pk=pathy.pk)
                 therapiesWithDrugs.append({
                     "name": pathy.name,
                     "imageLink": pathy.image_link.url,
                     "summary": summary.summary
                 })
-            all_pathies.update({"therapiesWithDrugs": therapiesWithDrugs})
+            all_pathies.update({THERAPIESWITHDRUGS: therapiesWithDrugs})
             logger.info("therapies with drugs fetched")
 
             therapiesWithoutDrugs = []
-            for pathy in pathy_table.objects.filter(disease__name=disease, type="therapiesWithoutDrugs"):
+            for pathy in pathy_table.objects.filter(disease__name=disease, type=THERAPIESWITHOUTDRUGS):
                 summary = summary_table.objects.get(pathy__pk=pathy.pk)
                 therapiesWithoutDrugs.append({
                     "name": pathy.name,
                     "imageLink": pathy.image_link.url,
                     "summary": summary.summary
                 })
-            all_pathies.update({"therapiesWithoutDrugs": therapiesWithoutDrugs})
+            all_pathies.update({THERAPIESWITHOUTDRUGS: therapiesWithoutDrugs})
             logger.info("therapies without drugs fetched")
 
             lessKnownTherapies = []
-            for pathy in pathy_table.objects.filter(disease__name=disease, type="lessKnownTherapies"):
+            for pathy in pathy_table.objects.filter(disease__name=disease, type=LESSKNOWNTHERAPIES):
                 summary = summary_table.objects.get(pathy__pk=pathy.pk)
                 lessKnownTherapies.append({
                     "name": pathy.name,
                     "imageLink": pathy.image_link.url,
                     "summary": summary.summary
                 })
-            all_pathies.update({"lessKnownTherapies": lessKnownTherapies})
+            all_pathies.update({LESSKNOWNTHERAPIES: lessKnownTherapies})
             logger.info("less known therapies fetched")
 
             final_data.update({"pathies": all_pathies})
