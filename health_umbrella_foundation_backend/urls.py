@@ -33,6 +33,8 @@ urlpatterns = [
     path("members/", include("members.urls")),
     path("user-forms/", include("user_forms.urls")),
     path("analytics/", include("analytics.urls")),
+    path("validate/", include("validate.urls")),
+
 ]
 
 if settings.DEBUG:
