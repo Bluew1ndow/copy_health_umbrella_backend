@@ -54,7 +54,9 @@ INSTALLED_APPS = [
     "clinics",
     "members",
     "user_forms",
-    "import_export"
+    "import_export",
+    "donation",
+    "chatbot"
 ]
 
 MIDDLEWARE = [
